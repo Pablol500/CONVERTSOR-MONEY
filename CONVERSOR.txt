@@ -1,0 +1,50 @@
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+public class CurrencyConverter {
+    private static final String API_KEY = "c2da2951ee700debe5209d20"; // Reemplázala con tu clave real
+    private static final String BASE_URL = "https://v6.exchangerate-api.com/v6/" + API_KEY + "/latest/";
+
+    public static double getExchangeRate(String baseCurrency, String targetCurrency) throws Exception {
+        String urlStr = BASE_URL + baseCurrency;
+        URL url = new URL(urlStr);
+        HttpURLConnection request = (HttpURLConnection) url.openConnection();
+        request.setRequestMethod("GET");
+
+        // Leer respuesta
+        InputStreamReader reader = new InputStreamReader(request.getInputStream());
+        JsonObject jsonResponse = JsonParser.parseReader(reader).getAsJsonObject();
+        reader.close();
+
+        // Obtener tasas de cambio
+        JsonObject conversionRates = jsonResponse.getAsJsonObject("conversion_rates");
+        return conversionRates.get(targetCurrency).getAsDouble();
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.print("Ingrese la moneda base (ej: USD): ");
+        String baseCurrency = scanner.next().toUpperCase();
+        
+        System.out.print("Ingrese la moneda de destino (ej: EUR): ");
+        String targetCurrency = scanner.next().toUpperCase();
+        
+        System.out.print("Ingrese el monto a convertir: ");
+        double amount = scanner.nextDouble();
+
+        try {
+            double rate = getExchangeRate(baseCurrency, targetCurrency);
+            double convertedAmount = amount * rate;
+            System.out.printf("%.2f %s equivale a %.2f %s\n", amount, baseCurrency, convertedAmount, targetCurrency);
+        } catch (Exception e) {
+            System.out.println("Error al obtener la tasa de cambio: " + e.getMessage());
+        }
+
+        scanner.close();
+    }
+}
